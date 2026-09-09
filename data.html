@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0">
+
+    <title>Data Analysis</title>
+
+    <link rel="stylesheet"
+          href="{{ url_for('static', filename='style.css') }}">
+
+</head>
+
+
+<body>
+
+<div class="container">
+
+    <!-- =====================================
+         Title
+         ===================================== -->
+
+    <h1>Data Analysis</h1>
+
+    <h2>{{ filename }}</h2>
+
+
+    <!-- =====================================
+         Dataset Summary
+         ===================================== -->
+
+    <div class="summary">
+
+        <div>
+            <strong>{{ rows }}</strong>
+            <p>Observations</p>
+        </div>
+
+        <div>
+            <strong>{{ columns }}</strong>
+            <p>Variables</p>
+        </div>
+
+    </div>
+
+
+    <hr>
+
+
+    <!-- =====================================
+         Numeric Variables
+         ===================================== -->
+
+    <h2>Variable Information</h2>
+
+    <h3>Numeric Variables</h3>
+
+    {% if numeric_variables %}
+
+        <ul>
+
+        {% for variable in numeric_variables %}
+
+            <li>{{ variable }}</li>
+
+        {% endfor %}
+
+        </ul>
+
+    {% else %}
+
+        <p>No numeric variables found.</p>
+
+    {% endif %}
+
+
+    <!-- =====================================
+         Categorical Variables
+         ===================================== -->
+
+    <h3>Categorical Variables</h3>
+
+    {% if categorical_variables %}
+
+        <ul>
+
+        {% for variable in categorical_variables %}
+
+            <li>{{ variable }}</li>
+
+        {% endfor %}
+
+        </ul>
+
+    {% else %}
+
+        <p>No categorical variables found.</p>
+
+    {% endif %}
+
+
+    <hr>
+
+
+    <!-- =====================================
+         Data Preview
+         ===================================== -->
+
+    <h2>Data Preview</h2>
+
+    <p>Showing the first 100 rows.</p>
+
+    <div class="table-container">
+
+        {{ table | safe }}
+
+    </div>
+
+
+    <br>
+
+
+    <!-- =====================================
+         Return to Upload Page
+         ===================================== -->
+
+    <a href="/">
+        ← Upload another file
+    </a>
+
+
+</div>
+
+
+<!-- =========================================
+     JavaScript
+     ========================================= -->
+
+<script src="{{ url_for('static', filename='script.js') }}"></script>
+
+</body>
+
+</html>
