@@ -6,41 +6,77 @@
 
     <meta charset="UTF-8">
 
-    <meta name="viewport"
-          content="width=device-width, initial-scale=1.0">
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
 
     <title>Data Analysis</title>
 
-    <link rel="stylesheet"
-          href="{{ url_for('static', filename='style.css') }}">
+
+    <link
+        rel="stylesheet"
+        href="{{ url_for(
+            'static',
+            filename='style.css'
+        ) }}"
+    >
 
 </head>
 
 
 <body>
 
+
 <div class="container">
 
-    <h1>Data Analysis</h1>
 
-    <h2>{{ filename }}</h2>
+    <!-- =================================================
+         Header
+         ================================================= -->
+
+    <h1>
+        Data Analysis
+    </h1>
 
 
-    <!-- =====================================
+    <h2 class="filename">
+        {{ filename }}
+    </h2>
+
+
+    <!-- =================================================
          Dataset Summary
-         ===================================== -->
+         ================================================= -->
 
     <div class="summary">
 
-        <div>
-            <strong>{{ rows }}</strong>
-            <p>Observations</p>
+
+        <div class="summary-card">
+
+            <strong>
+                {{ rows }}
+            </strong>
+
+            <span>
+                Observations
+            </span>
+
         </div>
 
-        <div>
-            <strong>{{ columns }}</strong>
-            <p>Variables</p>
+
+        <div class="summary-card">
+
+            <strong>
+                {{ columns }}
+            </strong>
+
+            <span>
+                Variables
+            </span>
+
         </div>
+
 
     </div>
 
@@ -48,230 +84,362 @@
     <hr>
 
 
-    <!-- =====================================
+    <!-- =================================================
          Variable Information
-         ===================================== -->
+         ================================================= -->
 
-    <h2>Variable Information</h2>
+    <h2>
+        Variable Information
+    </h2>
 
 
-    <h3>Numeric Variables</h3>
+    <div class="variable-columns">
 
-    {% if numeric_variables %}
 
-        <ul>
+        <!-- Numeric -->
 
-        {% for variable in numeric_variables %}
+        <div class="variable-box">
 
-            <li>{{ variable }}</li>
+            <h3>
+                Numeric Variables
+            </h3>
 
-        {% endfor %}
 
-        </ul>
+            {% if numeric_variables %}
 
-    {% else %}
+                <ul>
 
-        <p>No numeric variables found.</p>
+                {% for variable in numeric_variables %}
 
-    {% endif %}
+                    <li>
+                        {{ variable }}
+                    </li>
 
+                {% endfor %}
 
-    <h3>Categorical Variables</h3>
+                </ul>
 
-    {% if categorical_variables %}
+            {% else %}
 
-        <ul>
+                <p>
+                    No numeric variables found.
+                </p>
 
-        {% for variable in categorical_variables %}
-
-            <li>{{ variable }}</li>
-
-        {% endfor %}
-
-        </ul>
-
-    {% else %}
-
-        <p>No categorical variables found.</p>
-
-    {% endif %}
-
-
-    <hr>
-
-
-    <!-- =====================================
-         ONE-VARIABLE ANALYSIS
-         ===================================== -->
-
-    <h2>One-Variable Analysis</h2>
-
-    <p>
-        Select a variable and choose an appropriate graph.
-    </p>
-
-
-    <form
-        action="/analyze"
-        method="POST"
-    >
-
-        <!-- Keep track of the uploaded file -->
-
-        <input
-            type="hidden"
-            name="filename"
-            value="{{ filename }}"
-        >
-
-
-        <!-- Variable -->
-
-        <label for="variable">
-            <strong>Variable:</strong>
-        </label>
-
-        <br><br>
-
-        <select
-            id="variable"
-            name="variable"
-            required
-        >
-
-            <option value="">
-                -- Select a variable --
-            </option>
-
-
-            {% for variable in all_variables %}
-
-                <option
-                    value="{{ variable }}"
-                    {% if selected_variable == variable %}
-                    selected
-                    {% endif %}
-                >
-
-                    {{ variable }}
-
-                </option>
-
-            {% endfor %}
-
-        </select>
-
-
-        <br><br>
-
-
-        <!-- Graph type -->
-
-        <label for="graph_type">
-            <strong>Graph:</strong>
-        </label>
-
-        <br><br>
-
-        <select
-            id="graph_type"
-            name="graph_type"
-            required
-        >
-
-            <option value="">
-                -- Select a graph --
-            </option>
-
-            <option
-                value="histogram"
-                {% if graph_type == "histogram" %}
-                selected
-                {% endif %}
-            >
-                Histogram
-            </option>
-
-            <option
-                value="boxplot"
-                {% if graph_type == "boxplot" %}
-                selected
-                {% endif %}
-            >
-                Boxplot
-            </option>
-
-            <option
-                value="barplot"
-                {% if graph_type == "barplot" %}
-                selected
-                {% endif %}
-            >
-                Bar Chart
-            </option>
-
-        </select>
-
-
-        <br><br>
-
-
-        <button type="submit">
-            Create Graph
-        </button>
-
-    </form>
-
-
-    <!-- =====================================
-         Graph Result
-         ===================================== -->
-
-    {% if graph_file %}
-
-        <hr>
-
-        <h2>Graph</h2>
-
-        <p>
-            <strong>Variable:</strong>
-            {{ selected_variable }}
-        </p>
-
-        <p>
-            <strong>Graph:</strong>
-            {{ graph_type }}
-        </p>
-
-
-        <div class="graph-container">
-
-            <img
-                src="{{ url_for(
-                    'static',
-                    filename='plots/' + graph_file
-                ) }}"
-                alt="Data visualization"
-                class="analysis-graph"
-            >
+            {% endif %}
 
         </div>
 
-    {% endif %}
+
+        <!-- Categorical -->
+
+        <div class="variable-box">
+
+            <h3>
+                Categorical Variables
+            </h3>
+
+
+            {% if categorical_variables %}
+
+                <ul>
+
+                {% for variable in categorical_variables %}
+
+                    <li>
+                        {{ variable }}
+                    </li>
+
+                {% endfor %}
+
+                </ul>
+
+            {% else %}
+
+                <p>
+                    No categorical variables found.
+                </p>
+
+            {% endif %}
+
+        </div>
+
+
+    </div>
 
 
     <hr>
 
 
-    <!-- =====================================
-         Data Preview
-         ===================================== -->
+    <!-- =================================================
+         ONE VARIABLE ANALYSIS
+         ================================================= -->
 
-    <h2>Data Preview</h2>
+    <div class="analysis-card">
+
+
+        <h2>
+            One-Variable Analysis
+        </h2>
+
+
+        <p>
+            Select one variable and create
+            an appropriate visualization.
+        </p>
+
+
+        <form
+            action="/analyze"
+            method="POST"
+            class="analysis-form"
+        >
+
+
+            <!-- Filename -->
+
+            <input
+                type="hidden"
+                name="filename"
+                value="{{ filename }}"
+            >
+
+
+            <!-- Variable -->
+
+            <div class="form-group">
+
+                <label for="variable">
+
+                    Variable
+
+                </label>
+
+
+                <select
+                    id="variable"
+                    name="variable"
+                    required
+                >
+
+
+                    <option value="">
+
+                        -- Select a variable --
+
+                    </option>
+
+
+                    {% for variable in all_variables %}
+
+
+                        <option
+                            value="{{ variable }}"
+
+                            {% if
+                                selected_variable
+                                == variable
+                            %}
+
+                                selected
+
+                            {% endif %}
+                        >
+
+                            {{ variable }}
+
+                        </option>
+
+
+                    {% endfor %}
+
+
+                </select>
+
+            </div>
+
+
+            <!-- Graph -->
+
+            <div class="form-group">
+
+                <label for="graph_type">
+
+                    Visualization
+
+                </label>
+
+
+                <select
+                    id="graph_type"
+                    name="graph_type"
+                    required
+                >
+
+
+                    <option value="">
+
+                        -- Select a graph --
+
+                    </option>
+
+
+                    <option
+                        value="histogram"
+
+                        {% if
+                            graph_type
+                            == "histogram"
+                        %}
+
+                            selected
+
+                        {% endif %}
+                    >
+
+                        Histogram
+
+                    </option>
+
+
+                    <option
+                        value="boxplot"
+
+                        {% if
+                            graph_type
+                            == "boxplot"
+                        %}
+
+                            selected
+
+                        {% endif %}
+                    >
+
+                        Boxplot
+
+                    </option>
+
+
+                    <option
+                        value="barplot"
+
+                        {% if
+                            graph_type
+                            == "barplot"
+                        %}
+
+                            selected
+
+                        {% endif %}
+                    >
+
+                        Bar Chart
+
+                    </option>
+
+
+                </select>
+
+            </div>
+
+
+            <button
+                type="submit"
+            >
+
+                Create Graph
+
+            </button>
+
+
+        </form>
+
+
+    </div>
+
+
+    <!-- =================================================
+         Graph Result
+         ================================================= -->
+
+    {% if graph_file %}
+
+
+        <hr>
+
+
+        <div class="graph-card">
+
+
+            <h2>
+                Visualization
+            </h2>
+
+
+            <div class="graph-info">
+
+                <p>
+                    <strong>
+                        Variable:
+                    </strong>
+
+                    {{ selected_variable }}
+                </p>
+
+
+                <p>
+                    <strong>
+                        Graph:
+                    </strong>
+
+                    {{ graph_type }}
+                </p>
+
+            </div>
+
+
+            <div class="graph-container">
+
+
+                <img
+
+                    src="{{ url_for(
+                        'static',
+                        filename='plots/'
+                        + graph_file
+                    ) }}"
+
+                    alt="Data visualization"
+
+                    class="analysis-graph"
+
+                >
+
+
+            </div>
+
+
+        </div>
+
+
+    {% endif %}
+
+
+    <!-- =================================================
+         Data Preview
+         ================================================= -->
+
+    <hr>
+
+
+    <h2>
+        Data Preview
+    </h2>
+
 
     <p>
         Showing the first 100 rows.
     </p>
+
 
     <div class="table-container">
 
@@ -283,8 +451,13 @@
     <br>
 
 
-    <a href="/">
+    <a
+        href="/"
+        class="back-link"
+    >
+
         ← Upload another file
+
     </a>
 
 
@@ -295,8 +468,9 @@
     src="{{ url_for(
         'static',
         filename='script.js'
-    ) }}">
-</script>
+    ) }}"
+></script>
+
 
 </body>
 
