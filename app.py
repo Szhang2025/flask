@@ -1,4 +1,3 @@
-
 from flask import Flask, render_template, request
 import pandas as pd
 import os
@@ -71,11 +70,9 @@ def read_data(filepath, filename):
         1
     )[1].lower()
 
-
     if extension == "csv":
 
         try:
-
             df = pd.read_csv(filepath)
 
         except UnicodeDecodeError:
@@ -85,7 +82,6 @@ def read_data(filepath, filename):
                 encoding="latin1"
             )
 
-
     elif extension == "xlsx":
 
         df = pd.read_excel(
@@ -93,20 +89,17 @@ def read_data(filepath, filename):
             engine="openpyxl"
         )
 
-
     elif extension == "xls":
 
         df = pd.read_excel(
             filepath
         )
 
-
     else:
 
         raise ValueError(
             "Unsupported file type."
         )
-
 
     return df
 
@@ -126,7 +119,6 @@ def get_variable_types(df):
         .tolist()
     )
 
-
     categorical_variables = (
         df
         .select_dtypes(
@@ -140,11 +132,44 @@ def get_variable_types(df):
         .tolist()
     )
 
-
     return (
         numeric_variables,
         categorical_variables
     )
+
+
+# =========================================================
+# CREATE DATA TABLE
+# =========================================================
+
+def create_table(df):
+
+    preview = df.head(100)
+
+    return preview.to_html(
+        classes="data-table",
+        index=False
+    )
+
+
+# =========================================================
+# CREATE COMMON PAGE DATA
+# =========================================================
+
+def get_page_data(df):
+
+    numeric_variables, categorical_variables = (
+        get_variable_types(df)
+    )
+
+    return {
+        "rows": len(df),
+        "columns": len(df.columns),
+        "table": create_table(df),
+        "numeric_variables": numeric_variables,
+        "categorical_variables": categorical_variables,
+        "all_variables": df.columns.tolist()
+    }
 
 
 # =========================================================
@@ -169,26 +194,15 @@ def home():
 )
 def upload():
 
-    # -----------------------------------------------------
-    # Check file
-    # -----------------------------------------------------
-
     if "file" not in request.files:
 
         return "No file selected."
 
-
     file = request.files["file"]
-
 
     if file.filename == "":
 
         return "No file selected."
-
-
-    # -----------------------------------------------------
-    # Check extension
-    # -----------------------------------------------------
 
     if not allowed_file(
         file.filename
@@ -198,25 +212,14 @@ def upload():
             "Only CSV and Excel files are allowed."
         )
 
-
-    # -----------------------------------------------------
-    # Secure filename
-    # -----------------------------------------------------
-
     filename = secure_filename(
         file.filename
     )
-
 
     filepath = os.path.join(
         app.config["UPLOAD_FOLDER"],
         filename
     )
-
-
-    # -----------------------------------------------------
-    # Save file
-    # -----------------------------------------------------
 
     try:
 
@@ -227,11 +230,6 @@ def upload():
         return (
             f"Error saving file: {e}"
         )
-
-
-    # -----------------------------------------------------
-    # Read data
-    # -----------------------------------------------------
 
     try:
 
@@ -246,62 +244,44 @@ def upload():
             f"Error reading file: {e}"
         )
 
-
-    # -----------------------------------------------------
-    # Dataset information
-    # -----------------------------------------------------
-
-    rows = len(df)
-
-    columns = len(df.columns)
-
-
-    (
-        numeric_variables,
-        categorical_variables
-    ) = get_variable_types(df)
-
-
-    # -----------------------------------------------------
-    # Preview
-    # -----------------------------------------------------
-
-    preview = df.head(100)
-
-
-    table = preview.to_html(
-        classes="data-table",
-        index=False
-    )
-
-
-    # -----------------------------------------------------
-    # Results page
-    # -----------------------------------------------------
+    page_data = get_page_data(df)
 
     return render_template(
-
         "data.html",
 
         filename=filename,
 
-        rows=rows,
+        rows=page_data["rows"],
 
-        columns=columns,
+        columns=page_data["columns"],
 
-        table=table,
+        table=page_data["table"],
 
-        numeric_variables=numeric_variables,
+        numeric_variables=page_data[
+            "numeric_variables"
+        ],
 
-        categorical_variables=categorical_variables,
+        categorical_variables=page_data[
+            "categorical_variables"
+        ],
 
-        all_variables=df.columns.tolist(),
+        all_variables=page_data[
+            "all_variables"
+        ],
 
         graph_type=None,
 
         graph_file=None,
 
         selected_variable=None,
+
+        variable1=None,
+
+        variable2=None,
+
+        graph_type_two=None,
+
+        graph_file_two=None,
 
         error=None
     )
@@ -329,17 +309,9 @@ def analyze():
         "graph_type"
     )
 
-
-    # -----------------------------------------------------
-    # Validate input
-    # -----------------------------------------------------
-
     if not filename:
 
-        return (
-            "Missing filename."
-        )
-
+        return "Missing filename."
 
     if not variable:
 
@@ -347,23 +319,16 @@ def analyze():
             "Please select a variable."
         )
 
-
     if not graph_type:
 
         return (
             "Please select a graph."
         )
 
-
-    # -----------------------------------------------------
-    # Find uploaded file
-    # -----------------------------------------------------
-
     filepath = os.path.join(
         app.config["UPLOAD_FOLDER"],
         filename
     )
-
 
     if not os.path.exists(filepath):
 
@@ -372,11 +337,6 @@ def analyze():
             "available. Please upload the "
             "data again."
         )
-
-
-    # -----------------------------------------------------
-    # Read data
-    # -----------------------------------------------------
 
     try:
 
@@ -391,30 +351,19 @@ def analyze():
             f"Error reading data: {e}"
         )
 
-
-    # -----------------------------------------------------
-    # Check variable
-    # -----------------------------------------------------
-
     if variable not in df.columns:
 
         return (
             "Variable not found."
         )
 
-
-    # -----------------------------------------------------
-    # Variable types
-    # -----------------------------------------------------
-
     (
         numeric_variables,
         categorical_variables
     ) = get_variable_types(df)
 
-
     # -----------------------------------------------------
-    # Validate graph type
+    # Validate graph
     # -----------------------------------------------------
 
     if graph_type in [
@@ -429,23 +378,18 @@ def analyze():
                 "require a numeric variable."
             )
 
-
     elif graph_type == "barplot":
 
         if variable not in categorical_variables:
 
             return (
-                "Bar chart requires "
-                "a categorical variable."
+                "Bar chart requires a "
+                "categorical variable."
             )
-
 
     else:
 
-        return (
-            "Invalid graph type."
-        )
-
+        return "Invalid graph type."
 
     # -----------------------------------------------------
     # Remove missing values
@@ -453,14 +397,12 @@ def analyze():
 
     data = df[variable].dropna()
 
-
     if len(data) == 0:
 
         return (
             "The selected variable "
             "contains no usable data."
         )
-
 
     # -----------------------------------------------------
     # Unique graph filename
@@ -471,25 +413,18 @@ def analyze():
         + ".png"
     )
 
-
     graph_path = os.path.join(
         PLOT_FOLDER,
         graph_filename
     )
 
-
     # -----------------------------------------------------
-    # Create figure
+    # Create graph
     # -----------------------------------------------------
 
     plt.figure(
         figsize=(8, 5)
     )
-
-
-    # =====================================================
-    # HISTOGRAM
-    # =====================================================
 
     if graph_type == "histogram":
 
@@ -511,11 +446,6 @@ def analyze():
             f"Histogram of {variable}"
         )
 
-
-    # =====================================================
-    # BOXPLOT
-    # =====================================================
-
     elif graph_type == "boxplot":
 
         plt.boxplot(
@@ -530,11 +460,6 @@ def analyze():
             f"Boxplot of {variable}"
         )
 
-
-    # =====================================================
-    # BAR CHART
-    # =====================================================
-
     elif graph_type == "barplot":
 
         counts = (
@@ -546,11 +471,9 @@ def analyze():
             )
         )
 
-
         counts.plot(
             kind="bar"
         )
-
 
         plt.xlabel(
             variable
@@ -564,19 +487,12 @@ def analyze():
             f"Bar Chart of {variable}"
         )
 
-
         plt.xticks(
             rotation=45,
             ha="right"
         )
 
-
-    # -----------------------------------------------------
-    # Save graph
-    # -----------------------------------------------------
-
     plt.tight_layout()
-
 
     plt.savefig(
         graph_path,
@@ -584,50 +500,418 @@ def analyze():
         bbox_inches="tight"
     )
 
-
     plt.close()
 
-
     # -----------------------------------------------------
-    # Data preview
+    # Return page
     # -----------------------------------------------------
 
-    preview = df.head(100)
-
-
-    table = preview.to_html(
-        classes="data-table",
-        index=False
-    )
-
-
-    # -----------------------------------------------------
-    # Display results
-    # -----------------------------------------------------
+    page_data = get_page_data(df)
 
     return render_template(
-
         "data.html",
 
         filename=filename,
 
-        rows=len(df),
+        rows=page_data["rows"],
 
-        columns=len(df.columns),
+        columns=page_data["columns"],
 
-        table=table,
+        table=page_data["table"],
 
-        numeric_variables=numeric_variables,
+        numeric_variables=page_data[
+            "numeric_variables"
+        ],
 
-        categorical_variables=categorical_variables,
+        categorical_variables=page_data[
+            "categorical_variables"
+        ],
 
-        all_variables=df.columns.tolist(),
+        all_variables=page_data[
+            "all_variables"
+        ],
 
         graph_type=graph_type,
 
         graph_file=graph_filename,
 
         selected_variable=variable,
+
+        variable1=None,
+
+        variable2=None,
+
+        graph_type_two=None,
+
+        graph_file_two=None,
+
+        error=None
+    )
+
+
+# =========================================================
+# TWO-VARIABLE ANALYSIS
+# =========================================================
+
+@app.route(
+    "/analyze-two",
+    methods=["POST"]
+)
+def analyze_two():
+
+    filename = request.form.get(
+        "filename"
+    )
+
+    variable1 = request.form.get(
+        "variable1"
+    )
+
+    variable2 = request.form.get(
+        "variable2"
+    )
+
+    graph_type = request.form.get(
+        "graph_type_two"
+    )
+
+    if not filename:
+
+        return "Missing filename."
+
+    if not variable1 or not variable2:
+
+        return (
+            "Please select two variables."
+        )
+
+    if variable1 == variable2:
+
+        return (
+            "Please select two different variables."
+        )
+
+    if not graph_type:
+
+        return (
+            "Please select a graph."
+        )
+
+    filepath = os.path.join(
+        app.config["UPLOAD_FOLDER"],
+        filename
+    )
+
+    if not os.path.exists(filepath):
+
+        return (
+            "The uploaded file is no longer "
+            "available. Please upload the "
+            "data again."
+        )
+
+    try:
+
+        df = read_data(
+            filepath,
+            filename
+        )
+
+    except Exception as e:
+
+        return (
+            f"Error reading data: {e}"
+        )
+
+    if variable1 not in df.columns:
+
+        return (
+            f"Variable not found: {variable1}"
+        )
+
+    if variable2 not in df.columns:
+
+        return (
+            f"Variable not found: {variable2}"
+        )
+
+    (
+        numeric_variables,
+        categorical_variables
+    ) = get_variable_types(df)
+
+    type1 = (
+        "numeric"
+        if variable1 in numeric_variables
+        else "categorical"
+    )
+
+    type2 = (
+        "numeric"
+        if variable2 in numeric_variables
+        else "categorical"
+    )
+
+    # -----------------------------------------------------
+    # Validate graph type
+    # -----------------------------------------------------
+
+    if graph_type == "scatterplot":
+
+        if not (
+            type1 == "numeric"
+            and type2 == "numeric"
+        ):
+
+            return (
+                "Scatterplot requires "
+                "two numeric variables."
+            )
+
+    elif graph_type == "boxplot_two":
+
+        if not (
+            (
+                type1 == "categorical"
+                and type2 == "numeric"
+            )
+            or
+            (
+                type1 == "numeric"
+                and type2 == "categorical"
+            )
+        ):
+
+            return (
+                "Side-by-side boxplot requires "
+                "one categorical and one numeric variable."
+            )
+
+    elif graph_type == "grouped_bar":
+
+        if not (
+            type1 == "categorical"
+            and type2 == "categorical"
+        ):
+
+            return (
+                "Grouped bar chart requires "
+                "two categorical variables."
+            )
+
+    else:
+
+        return "Invalid graph type."
+
+    # -----------------------------------------------------
+    # Select useful columns and remove missing values
+    # -----------------------------------------------------
+
+    data = df[
+        [variable1, variable2]
+    ].dropna()
+
+    if len(data) == 0:
+
+        return (
+            "There are no complete observations "
+            "for the selected variables."
+        )
+
+    # -----------------------------------------------------
+    # Create graph filename
+    # -----------------------------------------------------
+
+    graph_filename = (
+        str(uuid.uuid4())
+        + ".png"
+    )
+
+    graph_path = os.path.join(
+        PLOT_FOLDER,
+        graph_filename
+    )
+
+    # -----------------------------------------------------
+    # Create graph
+    # -----------------------------------------------------
+
+    plt.figure(
+        figsize=(8, 5)
+    )
+
+    # =====================================================
+    # SCATTERPLOT
+    # =====================================================
+
+    if graph_type == "scatterplot":
+
+        plt.scatter(
+            data[variable1],
+            data[variable2],
+            alpha=0.7
+        )
+
+        plt.xlabel(
+            variable1
+        )
+
+        plt.ylabel(
+            variable2
+        )
+
+        plt.title(
+            f"{variable2} vs. {variable1}"
+        )
+
+    # =====================================================
+    # SIDE-BY-SIDE BOXPLOT
+    # =====================================================
+
+    elif graph_type == "boxplot_two":
+
+        if type1 == "categorical":
+
+            category = variable1
+            numeric = variable2
+
+        else:
+
+            category = variable2
+            numeric = variable1
+
+        groups = []
+
+        labels = []
+
+        grouped = data.groupby(
+            category,
+            sort=False
+        )
+
+        for name, group in grouped:
+
+            groups.append(
+                group[numeric].values
+            )
+
+            labels.append(
+                str(name)
+            )
+
+        plt.boxplot(
+            groups,
+            labels=labels
+        )
+
+        plt.xlabel(
+            category
+        )
+
+        plt.ylabel(
+            numeric
+        )
+
+        plt.title(
+            f"{numeric} by {category}"
+        )
+
+        plt.xticks(
+            rotation=45,
+            ha="right"
+        )
+
+    # =====================================================
+    # GROUPED BAR CHART
+    # =====================================================
+
+    elif graph_type == "grouped_bar":
+
+        table = pd.crosstab(
+            data[variable1],
+            data[variable2]
+        )
+
+        table.plot(
+            kind="bar",
+            figsize=(8, 5)
+        )
+
+        plt.xlabel(
+            variable1
+        )
+
+        plt.ylabel(
+            "Frequency"
+        )
+
+        plt.title(
+            f"{variable1} by {variable2}"
+        )
+
+        plt.xticks(
+            rotation=45,
+            ha="right"
+        )
+
+        plt.legend(
+            title=variable2,
+            bbox_to_anchor=(1.02, 1),
+            loc="upper left"
+        )
+
+    plt.tight_layout()
+
+    plt.savefig(
+        graph_path,
+        dpi=150,
+        bbox_inches="tight"
+    )
+
+    plt.close()
+
+    # -----------------------------------------------------
+    # Return page
+    # -----------------------------------------------------
+
+    page_data = get_page_data(df)
+
+    return render_template(
+        "data.html",
+
+        filename=filename,
+
+        rows=page_data["rows"],
+
+        columns=page_data["columns"],
+
+        table=page_data["table"],
+
+        numeric_variables=page_data[
+            "numeric_variables"
+        ],
+
+        categorical_variables=page_data[
+            "categorical_variables"
+        ],
+
+        all_variables=page_data[
+            "all_variables"
+        ],
+
+        graph_type=None,
+
+        graph_file=None,
+
+        selected_variable=None,
+
+        variable1=variable1,
+
+        variable2=variable2,
+
+        graph_type_two=graph_type,
+
+        graph_file_two=graph_filename,
 
         error=None
     )
@@ -655,7 +939,6 @@ if __name__ == "__main__":
     print()
     print("=" * 60)
     print()
-
 
     app.run(
         debug=True
