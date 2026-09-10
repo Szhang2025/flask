@@ -1,3 +1,4 @@
+```html
 <!DOCTYPE html>
 <html lang="en">
 
@@ -5,56 +6,172 @@
 
     <meta charset="UTF-8">
 
-    <meta name="viewport"
-          content="width=device-width, initial-scale=1.0">
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
 
     <title>Data Analysis</title>
 
-    <link rel="stylesheet"
-          href="{{ url_for('static', filename='style.css') }}">
+
+    <link
+        rel="stylesheet"
+        href="{{ url_for(
+            'static',
+            filename='style.css'
+        ) }}"
+    >
 
 </head>
 
 
 <body>
 
+
 <div class="container">
 
-    <h1>Data Analysis</h1>
 
-    <p>
-        Upload your CSV or Excel data file to begin.
-    </p>
+    <!-- =================================================
+         Header
+         ================================================= -->
+
+    <div class="header">
+
+        <h1>
+            Data Analysis
+        </h1>
+
+        <p class="subtitle">
+            Upload your CSV or Excel data file
+            to begin exploring your data.
+        </p>
+
+    </div>
 
 
-    <form action="/upload"
-          method="POST"
-          enctype="multipart/form-data">
+    <!-- =================================================
+         Upload Card
+         ================================================= -->
 
-        <label for="file">
-            Choose a data file:
-        </label>
+    <div class="upload-card">
 
-        <br><br>
+        <h2>
+            Upload Data
+        </h2>
 
-        <input
-            type="file"
-            id="file"
-            name="file"
-            accept=".csv,.xlsx,.xls"
-            required
+
+        <p>
+            Supported file types:
+            CSV, XLSX, XLS
+        </p>
+
+
+        <form
+            action="/upload"
+            method="POST"
+            enctype="multipart/form-data"
         >
 
-        <br><br>
 
-        <button type="submit">
-            Upload Data
-        </button>
+            <label
+                for="file"
+                class="file-label"
+            >
 
-    </form>
+                Choose a data file:
+
+            </label>
+
+
+            <input
+                type="file"
+                id="file"
+                name="file"
+                accept=".csv,.xlsx,.xls"
+                required
+            >
+
+
+            <br><br>
+
+
+            <button
+                type="submit"
+            >
+                Upload Data
+            </button>
+
+
+        </form>
+
+    </div>
+
+
+    <!-- =================================================
+         Features
+         ================================================= -->
+
+    <div class="feature-grid">
+
+
+        <div class="feature-card">
+
+            <h3>
+                📊 Explore
+            </h3>
+
+            <p>
+                Examine variables,
+                observations, and
+                data structure.
+            </p>
+
+        </div>
+
+
+        <div class="feature-card">
+
+            <h3>
+                📈 Visualize
+            </h3>
+
+            <p>
+                Create graphs appropriate
+                for your variables.
+            </p>
+
+        </div>
+
+
+        <div class="feature-card">
+
+            <h3>
+                🔍 Analyze
+            </h3>
+
+            <p>
+                More statistical analyses
+                will be added soon.
+            </p>
+
+        </div>
+
+
+    </div>
+
 
 </div>
+
+
+<script
+    src="{{ url_for(
+        'static',
+        filename='script.js'
+    ) }}"
+></script>
+
 
 </body>
 
 </html>
+```
