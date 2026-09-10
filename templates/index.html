@@ -12,13 +12,9 @@
 
     <title>Data Analysis</title>
 
-
     <link
         rel="stylesheet"
-        href="{{ url_for(
-            'static',
-            filename='style.css'
-        ) }}"
+        href="{{ url_for('static', filename='style.css') }}"
     >
 
 </head>
@@ -26,13 +22,8 @@
 
 <body>
 
-
 <div class="container">
 
-
-    <!-- =================================================
-         Header
-         ================================================= -->
 
     <div class="header">
 
@@ -48,16 +39,11 @@
     </div>
 
 
-    <!-- =================================================
-         Upload Card
-         ================================================= -->
-
     <div class="upload-card">
 
         <h2>
             Upload Data
         </h2>
-
 
         <p>
             Supported file types:
@@ -71,15 +57,15 @@
             enctype="multipart/form-data"
         >
 
-
             <label
                 for="file"
                 class="file-label"
             >
-
                 Choose a data file:
-
             </label>
+
+
+            <br><br>
 
 
             <input
@@ -94,21 +80,14 @@
             <br><br>
 
 
-            <button
-                type="submit"
-            >
+            <button type="submit">
                 Upload Data
             </button>
-
 
         </form>
 
     </div>
 
-
-    <!-- =================================================
-         Features
-         ================================================= -->
 
     <div class="feature-grid">
 
@@ -116,13 +95,12 @@
         <div class="feature-card">
 
             <h3>
-                📊 Explore
+                Explore
             </h3>
 
             <p>
-                Examine variables,
-                observations, and
-                data structure.
+                Examine observations,
+                variables, and data structure.
             </p>
 
         </div>
@@ -131,12 +109,12 @@
         <div class="feature-card">
 
             <h3>
-                📈 Visualize
+                Visualize
             </h3>
 
             <p>
-                Create graphs appropriate
-                for your variables.
+                Create one-variable and
+                two-variable visualizations.
             </p>
 
         </div>
@@ -145,12 +123,12 @@
         <div class="feature-card">
 
             <h3>
-                🔍 Analyze
+                Analyze
             </h3>
 
             <p>
-                More statistical analyses
-                will be added soon.
+                Statistical analysis
+                will be added next.
             </p>
 
         </div>
@@ -163,12 +141,8 @@
 
 
 <script
-    src="{{ url_for(
-        'static',
-        filename='script.js'
-    ) }}"
+    src="{{ url_for('static', filename='script.js') }}"
 ></script>
-
 
 </body>
 
