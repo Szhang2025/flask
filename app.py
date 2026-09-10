@@ -16,12 +16,15 @@ app = Flask(__name__)
 
 
 # =========================================================
-# Configuration
+# CONFIGURATION
 # =========================================================
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
-UPLOAD_FOLDER = os.path.join(BASE_DIR, "uploads")
+UPLOAD_FOLDER = os.path.join(
+    BASE_DIR,
+    "uploads"
+)
 
 PLOT_FOLDER = os.path.join(
     BASE_DIR,
@@ -34,13 +37,18 @@ os.makedirs(PLOT_FOLDER, exist_ok=True)
 
 app.config["UPLOAD_FOLDER"] = UPLOAD_FOLDER
 
+# Maximum upload size: 50 MB
 app.config["MAX_CONTENT_LENGTH"] = 50 * 1024 * 1024
 
-ALLOWED_EXTENSIONS = {"csv", "xlsx", "xls"}
+ALLOWED_EXTENSIONS = {
+    "csv",
+    "xlsx",
+    "xls"
+}
 
 
 # =========================================================
-# Check file type
+# CHECK FILE TYPE
 # =========================================================
 
 def allowed_file(filename):
@@ -53,16 +61,21 @@ def allowed_file(filename):
 
 
 # =========================================================
-# Read data
+# READ DATA
 # =========================================================
 
 def read_data(filepath, filename):
 
-    extension = filename.rsplit(".", 1)[1].lower()
+    extension = filename.rsplit(
+        ".",
+        1
+    )[1].lower()
+
 
     if extension == "csv":
 
         try:
+
             df = pd.read_csv(filepath)
 
         except UnicodeDecodeError:
@@ -72,6 +85,7 @@ def read_data(filepath, filename):
                 encoding="latin1"
             )
 
+
     elif extension == "xlsx":
 
         df = pd.read_excel(
@@ -79,9 +93,13 @@ def read_data(filepath, filename):
             engine="openpyxl"
         )
 
+
     elif extension == "xls":
 
-        df = pd.read_excel(filepath)
+        df = pd.read_excel(
+            filepath
+        )
+
 
     else:
 
@@ -89,28 +107,39 @@ def read_data(filepath, filename):
             "Unsupported file type."
         )
 
+
     return df
 
 
 # =========================================================
-# Determine variable types
+# DETERMINE VARIABLE TYPES
 # =========================================================
 
 def get_variable_types(df):
 
     numeric_variables = (
-        df.select_dtypes(include=["number"])
-        .columns
-        .tolist()
-    )
-
-    categorical_variables = (
-        df.select_dtypes(
-            include=["object", "category", "bool"]
+        df
+        .select_dtypes(
+            include=["number"]
         )
         .columns
         .tolist()
     )
+
+
+    categorical_variables = (
+        df
+        .select_dtypes(
+            include=[
+                "object",
+                "category",
+                "bool"
+            ]
+        )
+        .columns
+        .tolist()
+    )
+
 
     return (
         numeric_variables,
@@ -140,34 +169,71 @@ def home():
 )
 def upload():
 
+    # -----------------------------------------------------
+    # Check file
+    # -----------------------------------------------------
+
     if "file" not in request.files:
 
         return "No file selected."
 
+
     file = request.files["file"]
+
 
     if file.filename == "":
 
         return "No file selected."
 
-    if not allowed_file(file.filename):
+
+    # -----------------------------------------------------
+    # Check extension
+    # -----------------------------------------------------
+
+    if not allowed_file(
+        file.filename
+    ):
 
         return (
             "Only CSV and Excel files are allowed."
         )
 
+
+    # -----------------------------------------------------
+    # Secure filename
+    # -----------------------------------------------------
+
     filename = secure_filename(
         file.filename
     )
+
 
     filepath = os.path.join(
         app.config["UPLOAD_FOLDER"],
         filename
     )
 
+
+    # -----------------------------------------------------
+    # Save file
+    # -----------------------------------------------------
+
     try:
 
         file.save(filepath)
+
+    except Exception as e:
+
+        return (
+            f"Error saving file: {e}"
+        )
+
+
+    # -----------------------------------------------------
+    # Read data
+    # -----------------------------------------------------
+
+    try:
 
         df = read_data(
             filepath,
@@ -180,23 +246,41 @@ def upload():
             f"Error reading file: {e}"
         )
 
+
+    # -----------------------------------------------------
+    # Dataset information
+    # -----------------------------------------------------
+
     rows = len(df)
 
     columns = len(df.columns)
+
 
     (
         numeric_variables,
         categorical_variables
     ) = get_variable_types(df)
 
+
+    # -----------------------------------------------------
+    # Preview
+    # -----------------------------------------------------
+
     preview = df.head(100)
+
 
     table = preview.to_html(
         classes="data-table",
         index=False
     )
 
+
+    # -----------------------------------------------------
+    # Results page
+    # -----------------------------------------------------
+
     return render_template(
+
         "data.html",
 
         filename=filename,
@@ -245,21 +329,54 @@ def analyze():
         "graph_type"
     )
 
-    if not filename or not variable:
 
-        return "Missing filename or variable."
+    # -----------------------------------------------------
+    # Validate input
+    # -----------------------------------------------------
+
+    if not filename:
+
+        return (
+            "Missing filename."
+        )
+
+
+    if not variable:
+
+        return (
+            "Please select a variable."
+        )
+
+
+    if not graph_type:
+
+        return (
+            "Please select a graph."
+        )
+
+
+    # -----------------------------------------------------
+    # Find uploaded file
+    # -----------------------------------------------------
 
     filepath = os.path.join(
         app.config["UPLOAD_FOLDER"],
         filename
     )
 
+
     if not os.path.exists(filepath):
 
         return (
-            "The uploaded file is no longer available. "
-            "Please upload the data again."
+            "The uploaded file is no longer "
+            "available. Please upload the "
+            "data again."
         )
+
+
+    # -----------------------------------------------------
+    # Read data
+    # -----------------------------------------------------
 
     try:
 
@@ -274,26 +391,44 @@ def analyze():
             f"Error reading data: {e}"
         )
 
+
+    # -----------------------------------------------------
+    # Check variable
+    # -----------------------------------------------------
+
     if variable not in df.columns:
 
-        return "Variable not found."
+        return (
+            "Variable not found."
+        )
 
-    numeric_variables, categorical_variables = (
-        get_variable_types(df)
-    )
+
+    # -----------------------------------------------------
+    # Variable types
+    # -----------------------------------------------------
+
+    (
+        numeric_variables,
+        categorical_variables
+    ) = get_variable_types(df)
+
 
     # -----------------------------------------------------
     # Validate graph type
     # -----------------------------------------------------
 
-    if graph_type in ["histogram", "boxplot"]:
+    if graph_type in [
+        "histogram",
+        "boxplot"
+    ]:
 
         if variable not in numeric_variables:
 
             return (
-                "Histogram and boxplot require "
-                "a numeric variable."
+                "Histogram and boxplot "
+                "require a numeric variable."
             )
+
 
     elif graph_type == "barplot":
 
@@ -304,9 +439,12 @@ def analyze():
                 "a categorical variable."
             )
 
+
     else:
 
-        return "Invalid graph type."
+        return (
+            "Invalid graph type."
+        )
 
 
     # -----------------------------------------------------
@@ -316,14 +454,23 @@ def analyze():
     data = df[variable].dropna()
 
 
+    if len(data) == 0:
+
+        return (
+            "The selected variable "
+            "contains no usable data."
+        )
+
+
     # -----------------------------------------------------
-    # Create unique filename
+    # Unique graph filename
     # -----------------------------------------------------
 
     graph_filename = (
         str(uuid.uuid4())
         + ".png"
     )
+
 
     graph_path = os.path.join(
         PLOT_FOLDER,
@@ -332,13 +479,17 @@ def analyze():
 
 
     # -----------------------------------------------------
-    # Create graph
+    # Create figure
     # -----------------------------------------------------
 
     plt.figure(
         figsize=(8, 5)
     )
 
+
+    # =====================================================
+    # HISTOGRAM
+    # =====================================================
 
     if graph_type == "histogram":
 
@@ -348,50 +499,71 @@ def analyze():
             edgecolor="black"
         )
 
-        plt.xlabel(variable)
+        plt.xlabel(
+            variable
+        )
 
-        plt.ylabel("Frequency")
+        plt.ylabel(
+            "Frequency"
+        )
 
         plt.title(
             f"Histogram of {variable}"
         )
 
 
+    # =====================================================
+    # BOXPLOT
+    # =====================================================
+
     elif graph_type == "boxplot":
 
         plt.boxplot(
-            data,
-            vert=True
+            data
         )
 
-        plt.ylabel(variable)
+        plt.ylabel(
+            variable
+        )
 
         plt.title(
             f"Boxplot of {variable}"
         )
 
 
+    # =====================================================
+    # BAR CHART
+    # =====================================================
+
     elif graph_type == "barplot":
 
         counts = (
-            data.astype(str)
+            data
+            .astype(str)
             .value_counts()
             .sort_values(
                 ascending=False
             )
         )
 
+
         counts.plot(
             kind="bar"
         )
 
-        plt.xlabel(variable)
 
-        plt.ylabel("Frequency")
+        plt.xlabel(
+            variable
+        )
+
+        plt.ylabel(
+            "Frequency"
+        )
 
         plt.title(
             f"Bar Chart of {variable}"
         )
+
 
         plt.xticks(
             rotation=45,
@@ -399,12 +571,19 @@ def analyze():
         )
 
 
+    # -----------------------------------------------------
+    # Save graph
+    # -----------------------------------------------------
+
     plt.tight_layout()
+
 
     plt.savefig(
         graph_path,
-        dpi=150
+        dpi=150,
+        bbox_inches="tight"
     )
+
 
     plt.close()
 
@@ -415,6 +594,7 @@ def analyze():
 
     preview = df.head(100)
 
+
     table = preview.to_html(
         classes="data-table",
         index=False
@@ -422,10 +602,11 @@ def analyze():
 
 
     # -----------------------------------------------------
-    # Return results page
+    # Display results
     # -----------------------------------------------------
 
     return render_template(
+
         "data.html",
 
         filename=filename,
@@ -453,7 +634,7 @@ def analyze():
 
 
 # =========================================================
-# Run Flask
+# RUN APPLICATION
 # =========================================================
 
 if __name__ == "__main__":
@@ -464,12 +645,17 @@ if __name__ == "__main__":
     print("=" * 60)
 
     print()
+    print("Application folder:")
+    print(BASE_DIR)
+
+    print()
     print("Open your browser:")
     print("http://127.0.0.1:5000")
 
     print()
     print("=" * 60)
     print()
+
 
     app.run(
         debug=True
