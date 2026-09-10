@@ -1,9 +1,16 @@
-// =========================================
-// Data Analysis App - JavaScript
-// =========================================
+```javascript
+// =========================================================
+// Data Analysis App
+// =========================================================
 
-document.addEventListener("DOMContentLoaded", function () {
+document.addEventListener(
+    "DOMContentLoaded",
+    function () {
 
-    console.log("Data Analysis App loaded.");
+        console.log(
+            "Data Analysis App loaded."
+        );
 
-});
+    }
+);
+```
