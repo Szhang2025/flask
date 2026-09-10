@@ -1,3 +1,4 @@
+```html
 <!DOCTYPE html>
 <html lang="en">
 
@@ -19,10 +20,6 @@
 <body>
 
 <div class="container">
-
-    <!-- =====================================
-         Title
-         ===================================== -->
 
     <h1>Data Analysis</h1>
 
@@ -52,10 +49,11 @@
 
 
     <!-- =====================================
-         Numeric Variables
+         Variable Information
          ===================================== -->
 
     <h2>Variable Information</h2>
+
 
     <h3>Numeric Variables</h3>
 
@@ -77,10 +75,6 @@
 
     {% endif %}
 
-
-    <!-- =====================================
-         Categorical Variables
-         ===================================== -->
 
     <h3>Categorical Variables</h3>
 
@@ -107,12 +101,177 @@
 
 
     <!-- =====================================
+         ONE-VARIABLE ANALYSIS
+         ===================================== -->
+
+    <h2>One-Variable Analysis</h2>
+
+    <p>
+        Select a variable and choose an appropriate graph.
+    </p>
+
+
+    <form
+        action="/analyze"
+        method="POST"
+    >
+
+        <!-- Keep track of the uploaded file -->
+
+        <input
+            type="hidden"
+            name="filename"
+            value="{{ filename }}"
+        >
+
+
+        <!-- Variable -->
+
+        <label for="variable">
+            <strong>Variable:</strong>
+        </label>
+
+        <br><br>
+
+        <select
+            id="variable"
+            name="variable"
+            required
+        >
+
+            <option value="">
+                -- Select a variable --
+            </option>
+
+
+            {% for variable in all_variables %}
+
+                <option
+                    value="{{ variable }}"
+                    {% if selected_variable == variable %}
+                    selected
+                    {% endif %}
+                >
+
+                    {{ variable }}
+
+                </option>
+
+            {% endfor %}
+
+        </select>
+
+
+        <br><br>
+
+
+        <!-- Graph type -->
+
+        <label for="graph_type">
+            <strong>Graph:</strong>
+        </label>
+
+        <br><br>
+
+        <select
+            id="graph_type"
+            name="graph_type"
+            required
+        >
+
+            <option value="">
+                -- Select a graph --
+            </option>
+
+            <option
+                value="histogram"
+                {% if graph_type == "histogram" %}
+                selected
+                {% endif %}
+            >
+                Histogram
+            </option>
+
+            <option
+                value="boxplot"
+                {% if graph_type == "boxplot" %}
+                selected
+                {% endif %}
+            >
+                Boxplot
+            </option>
+
+            <option
+                value="barplot"
+                {% if graph_type == "barplot" %}
+                selected
+                {% endif %}
+            >
+                Bar Chart
+            </option>
+
+        </select>
+
+
+        <br><br>
+
+
+        <button type="submit">
+            Create Graph
+        </button>
+
+    </form>
+
+
+    <!-- =====================================
+         Graph Result
+         ===================================== -->
+
+    {% if graph_file %}
+
+        <hr>
+
+        <h2>Graph</h2>
+
+        <p>
+            <strong>Variable:</strong>
+            {{ selected_variable }}
+        </p>
+
+        <p>
+            <strong>Graph:</strong>
+            {{ graph_type }}
+        </p>
+
+
+        <div class="graph-container">
+
+            <img
+                src="{{ url_for(
+                    'static',
+                    filename='plots/' + graph_file
+                ) }}"
+                alt="Data visualization"
+                class="analysis-graph"
+            >
+
+        </div>
+
+    {% endif %}
+
+
+    <hr>
+
+
+    <!-- =====================================
          Data Preview
          ===================================== -->
 
     <h2>Data Preview</h2>
 
-    <p>Showing the first 100 rows.</p>
+    <p>
+        Showing the first 100 rows.
+    </p>
 
     <div class="table-container">
 
@@ -124,10 +283,6 @@
     <br>
 
 
-    <!-- =====================================
-         Return to Upload Page
-         ===================================== -->
-
     <a href="/">
         ← Upload another file
     </a>
@@ -136,12 +291,14 @@
 </div>
 
 
-<!-- =========================================
-     JavaScript
-     ========================================= -->
-
-<script src="{{ url_for('static', filename='script.js') }}"></script>
+<script
+    src="{{ url_for(
+        'static',
+        filename='script.js'
+    ) }}">
+</script>
 
 </body>
 
 </html>
+```
