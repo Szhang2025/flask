@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="en">
 
@@ -16,10 +15,7 @@
 
     <link
         rel="stylesheet"
-        href="{{ url_for(
-            'static',
-            filename='style.css'
-        ) }}"
+        href="{{ url_for('static', filename='style.css') }}"
     >
 
 </head>
@@ -27,13 +23,8 @@
 
 <body>
 
-
 <div class="container">
 
-
-    <!-- =================================================
-         Header
-         ================================================= -->
 
     <h1>
         Data Analysis
@@ -46,7 +37,7 @@
 
 
     <!-- =================================================
-         Dataset Summary
+         DATASET SUMMARY
          ================================================= -->
 
     <div class="summary">
@@ -85,7 +76,7 @@
 
 
     <!-- =================================================
-         Variable Information
+         VARIABLE INFORMATION
          ================================================= -->
 
     <h2>
@@ -95,8 +86,6 @@
 
     <div class="variable-columns">
 
-
-        <!-- Numeric -->
 
         <div class="variable-box">
 
@@ -129,8 +118,6 @@
 
         </div>
 
-
-        <!-- Categorical -->
 
         <div class="variable-box">
 
@@ -171,7 +158,7 @@
 
 
     <!-- =================================================
-         ONE VARIABLE ANALYSIS
+         ONE-VARIABLE ANALYSIS
          ================================================= -->
 
     <div class="analysis-card">
@@ -195,8 +182,6 @@
         >
 
 
-            <!-- Filename -->
-
             <input
                 type="hidden"
                 name="filename"
@@ -204,14 +189,10 @@
             >
 
 
-            <!-- Variable -->
-
             <div class="form-group">
 
                 <label for="variable">
-
                     Variable
-
                 </label>
 
 
@@ -221,27 +202,18 @@
                     required
                 >
 
-
                     <option value="">
-
                         -- Select a variable --
-
                     </option>
 
 
                     {% for variable in all_variables %}
 
-
                         <option
                             value="{{ variable }}"
 
-                            {% if
-                                selected_variable
-                                == variable
-                            %}
-
+                            {% if selected_variable == variable %}
                                 selected
-
                             {% endif %}
                         >
 
@@ -249,23 +221,17 @@
 
                         </option>
 
-
                     {% endfor %}
-
 
                 </select>
 
             </div>
 
 
-            <!-- Graph -->
-
             <div class="form-group">
 
                 <label for="graph_type">
-
                     Visualization
-
                 </label>
 
 
@@ -275,79 +241,32 @@
                     required
                 >
 
-
                     <option value="">
-
                         -- Select a graph --
-
                     </option>
 
 
-                    <option
-                        value="histogram"
-
-                        {% if
-                            graph_type
-                            == "histogram"
-                        %}
-
-                            selected
-
-                        {% endif %}
-                    >
-
+                    <option value="histogram">
                         Histogram
-
                     </option>
 
 
-                    <option
-                        value="boxplot"
-
-                        {% if
-                            graph_type
-                            == "boxplot"
-                        %}
-
-                            selected
-
-                        {% endif %}
-                    >
-
+                    <option value="boxplot">
                         Boxplot
-
                     </option>
 
 
-                    <option
-                        value="barplot"
-
-                        {% if
-                            graph_type
-                            == "barplot"
-                        %}
-
-                            selected
-
-                        {% endif %}
-                    >
-
+                    <option value="barplot">
                         Bar Chart
-
                     </option>
-
 
                 </select>
 
             </div>
 
 
-            <button
-                type="submit"
-            >
-
+            <button type="submit">
                 Create Graph
-
             </button>
 
 
@@ -358,7 +277,7 @@
 
 
     <!-- =================================================
-         Graph Result
+         ONE-VARIABLE RESULT
          ================================================= -->
 
     {% if graph_file %}
@@ -371,49 +290,38 @@
 
 
             <h2>
-                Visualization
+                One-Variable Visualization
             </h2>
 
 
-            <div class="graph-info">
+            <p>
+                <strong>
+                    Variable:
+                </strong>
 
-                <p>
-                    <strong>
-                        Variable:
-                    </strong>
-
-                    {{ selected_variable }}
-                </p>
+                {{ selected_variable }}
+            </p>
 
 
-                <p>
-                    <strong>
-                        Graph:
-                    </strong>
+            <p>
+                <strong>
+                    Graph:
+                </strong>
 
-                    {{ graph_type }}
-                </p>
-
-            </div>
+                {{ graph_type }}
+            </p>
 
 
             <div class="graph-container">
 
-
                 <img
-
                     src="{{ url_for(
                         'static',
-                        filename='plots/'
-                        + graph_file
+                        filename='plots/' + graph_file
                     ) }}"
-
-                    alt="Data visualization"
-
+                    alt="One-variable visualization"
                     class="analysis-graph"
-
                 >
-
 
             </div>
 
@@ -425,11 +333,262 @@
 
 
     <!-- =================================================
-         Data Preview
+         TWO-VARIABLE ANALYSIS
          ================================================= -->
+
+    <div class="analysis-card two-variable-card">
+
+
+        <h2>
+            Two-Variable Analysis
+        </h2>
+
+
+        <p>
+            Select two variables and create
+            a visualization appropriate for
+            their variable types.
+        </p>
+
+
+        <div class="type-guide">
+
+            <strong>
+                Available visualizations:
+            </strong>
+
+            <ul>
+
+                <li>
+                    Numeric + Numeric →
+                    Scatterplot
+                </li>
+
+                <li>
+                    Categorical + Numeric →
+                    Side-by-side Boxplot
+                </li>
+
+                <li>
+                    Categorical + Categorical →
+                    Grouped Bar Chart
+                </li>
+
+            </ul>
+
+        </div>
+
+
+        <form
+            action="/analyze-two"
+            method="POST"
+            class="analysis-form"
+        >
+
+
+            <input
+                type="hidden"
+                name="filename"
+                value="{{ filename }}"
+            >
+
+
+            <div class="form-group">
+
+                <label for="variable1">
+                    Variable 1
+                </label>
+
+
+                <select
+                    id="variable1"
+                    name="variable1"
+                    required
+                >
+
+                    <option value="">
+                        -- Select variable 1 --
+                    </option>
+
+
+                    {% for variable in all_variables %}
+
+                        <option
+                            value="{{ variable }}"
+
+                            {% if variable1 == variable %}
+                                selected
+                            {% endif %}
+                        >
+
+                            {{ variable }}
+
+                        </option>
+
+                    {% endfor %}
+
+                </select>
+
+            </div>
+
+
+            <div class="form-group">
+
+                <label for="variable2">
+                    Variable 2
+                </label>
+
+
+                <select
+                    id="variable2"
+                    name="variable2"
+                    required
+                >
+
+                    <option value="">
+                        -- Select variable 2 --
+                    </option>
+
+
+                    {% for variable in all_variables %}
+
+                        <option
+                            value="{{ variable }}"
+
+                            {% if variable2 == variable %}
+                                selected
+                            {% endif %}
+                        >
+
+                            {{ variable }}
+
+                        </option>
+
+                    {% endfor %}
+
+                </select>
+
+            </div>
+
+
+            <div class="form-group">
+
+                <label for="graph_type_two">
+                    Visualization
+                </label>
+
+
+                <select
+                    id="graph_type_two"
+                    name="graph_type_two"
+                    required
+                >
+
+                    <option value="">
+                        -- Select a graph --
+                    </option>
+
+
+                    <option value="scatterplot">
+                        Scatterplot
+                    </option>
+
+
+                    <option value="boxplot_two">
+                        Side-by-side Boxplot
+                    </option>
+
+
+                    <option value="grouped_bar">
+                        Grouped Bar Chart
+                    </option>
+
+                </select>
+
+            </div>
+
+
+            <button type="submit">
+                Create Graph
+            </button>
+
+
+        </form>
+
+
+    </div>
+
+
+    <!-- =================================================
+         TWO-VARIABLE RESULT
+         ================================================= -->
+
+    {% if graph_file_two %}
+
+
+        <hr>
+
+
+        <div class="graph-card">
+
+
+            <h2>
+                Two-Variable Visualization
+            </h2>
+
+
+            <p>
+
+                <strong>
+                    Variables:
+                </strong>
+
+                {{ variable1 }}
+
+                and
+
+                {{ variable2 }}
+
+            </p>
+
+
+            <p>
+
+                <strong>
+                    Graph:
+                </strong>
+
+                {{ graph_type_two }}
+
+            </p>
+
+
+            <div class="graph-container">
+
+                <img
+                    src="{{ url_for(
+                        'static',
+                        filename='plots/' + graph_file_two
+                    ) }}"
+                    alt="Two-variable visualization"
+                    class="analysis-graph"
+                >
+
+            </div>
+
+
+        </div>
+
+
+    {% endif %}
+
 
     <hr>
 
+
+    <!-- =================================================
+         DATA PREVIEW
+         ================================================= -->
 
     <h2>
         Data Preview
@@ -465,14 +624,10 @@
 
 
 <script
-    src="{{ url_for(
-        'static',
-        filename='script.js'
-    ) }}"
+    src="{{ url_for('static', filename='script.js') }}"
 ></script>
 
 
 </body>
 
 </html>
-
