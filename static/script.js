@@ -1,8 +1,3 @@
-
-// =========================================================
-// Data Analysis App
-// =========================================================
-
 document.addEventListener(
     "DOMContentLoaded",
     function () {
@@ -13,4 +8,3 @@ document.addEventListener(
 
     }
 );
-
