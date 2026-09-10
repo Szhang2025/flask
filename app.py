@@ -1,7 +1,16 @@
+```python
 from flask import Flask, render_template, request
 import pandas as pd
 import os
+import uuid
+import matplotlib
+
+matplotlib.use("Agg")
+
+import matplotlib.pyplot as plt
+
 from werkzeug.utils import secure_filename
+
 
 app = Flask(__name__)
 
@@ -14,18 +23,24 @@ BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
 UPLOAD_FOLDER = os.path.join(BASE_DIR, "uploads")
 
+PLOT_FOLDER = os.path.join(
+    BASE_DIR,
+    "static",
+    "plots"
+)
+
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
+os.makedirs(PLOT_FOLDER, exist_ok=True)
 
 app.config["UPLOAD_FOLDER"] = UPLOAD_FOLDER
 
-# Maximum file size: 50 MB
 app.config["MAX_CONTENT_LENGTH"] = 50 * 1024 * 1024
 
 ALLOWED_EXTENSIONS = {"csv", "xlsx", "xls"}
 
 
 # =========================================================
-# Check whether the file type is allowed
+# Check file type
 # =========================================================
 
 def allowed_file(filename):
@@ -38,7 +53,7 @@ def allowed_file(filename):
 
 
 # =========================================================
-# Read CSV or Excel file
+# Read data
 # =========================================================
 
 def read_data(filepath, filename):
@@ -125,176 +140,54 @@ def home():
 )
 def upload():
 
-    print()
-    print("=" * 60)
-    print("UPLOAD REQUEST RECEIVED")
-    print("=" * 60)
-
-
-    # -----------------------------------------------------
-    # Check whether a file was submitted
-    # -----------------------------------------------------
-
     if "file" not in request.files:
 
-        print("ERROR: No file field.")
-
         return "No file selected."
-
 
     file = request.files["file"]
 
-
-    # -----------------------------------------------------
-    # Check filename
-    # -----------------------------------------------------
-
     if file.filename == "":
-
-        print("ERROR: Empty filename.")
 
         return "No file selected."
 
-
-    # -----------------------------------------------------
-    # Check file type
-    # -----------------------------------------------------
-
     if not allowed_file(file.filename):
-
-        print("ERROR: File type not allowed.")
 
         return (
             "Only CSV and Excel files are allowed."
         )
 
-
-    # -----------------------------------------------------
-    # Make filename safe
-    # -----------------------------------------------------
-
     filename = secure_filename(
         file.filename
     )
-
 
     filepath = os.path.join(
         app.config["UPLOAD_FOLDER"],
         filename
     )
 
-
-    print("Filename:")
-    print(filename)
-
-    print()
-
-    print("File path:")
-    print(filepath)
-
-
-    # -----------------------------------------------------
-    # Save uploaded file
-    # -----------------------------------------------------
-
     try:
 
         file.save(filepath)
-
-        print()
-        print("File saved successfully.")
-
-    except Exception as e:
-
-        print()
-        print("ERROR SAVING FILE:")
-        print(e)
-
-        return (
-            f"Error saving file: {e}"
-        )
-
-
-    # -----------------------------------------------------
-    # Read the data
-    # -----------------------------------------------------
-
-    try:
 
         df = read_data(
             filepath,
             filename
         )
 
-        print()
-        print("Data loaded successfully.")
-
     except Exception as e:
-
-        print()
-        print("ERROR READING DATA:")
-        print(e)
 
         return (
             f"Error reading file: {e}"
         )
 
-
-    # -----------------------------------------------------
-    # Dataset dimensions
-    # -----------------------------------------------------
-
     rows = len(df)
 
     columns = len(df.columns)
-
-
-    print()
-    print("Rows:", rows)
-    print("Columns:", columns)
-
-
-    # -----------------------------------------------------
-    # Variable names
-    # -----------------------------------------------------
-
-    print()
-    print("Variables:")
-
-    for column in df.columns:
-
-        print(" -", column)
-
-
-    # -----------------------------------------------------
-    # Determine variable types
-    # -----------------------------------------------------
 
     (
         numeric_variables,
         categorical_variables
     ) = get_variable_types(df)
-
-
-    print()
-    print("Numeric variables:")
-
-    for variable in numeric_variables:
-
-        print(" -", variable)
-
-
-    print()
-    print("Categorical variables:")
-
-    for variable in categorical_variables:
-
-        print(" -", variable)
-
-
-    # -----------------------------------------------------
-    # Create data preview
-    # -----------------------------------------------------
 
     preview = df.head(100)
 
@@ -302,18 +195,6 @@ def upload():
         classes="data-table",
         index=False
     )
-
-
-    # -----------------------------------------------------
-    # Send everything to data.html
-    # -----------------------------------------------------
-
-    print()
-    print("Sending data to data.html...")
-
-    print("=" * 60)
-    print()
-
 
     return render_template(
         "data.html",
@@ -328,7 +209,246 @@ def upload():
 
         numeric_variables=numeric_variables,
 
-        categorical_variables=categorical_variables
+        categorical_variables=categorical_variables,
+
+        all_variables=df.columns.tolist(),
+
+        graph_type=None,
+
+        graph_file=None,
+
+        selected_variable=None,
+
+        error=None
+    )
+
+
+# =========================================================
+# ONE-VARIABLE ANALYSIS
+# =========================================================
+
+@app.route(
+    "/analyze",
+    methods=["POST"]
+)
+def analyze():
+
+    filename = request.form.get(
+        "filename"
+    )
+
+    variable = request.form.get(
+        "variable"
+    )
+
+    graph_type = request.form.get(
+        "graph_type"
+    )
+
+    if not filename or not variable:
+
+        return "Missing filename or variable."
+
+    filepath = os.path.join(
+        app.config["UPLOAD_FOLDER"],
+        filename
+    )
+
+    if not os.path.exists(filepath):
+
+        return (
+            "The uploaded file is no longer available. "
+            "Please upload the data again."
+        )
+
+    try:
+
+        df = read_data(
+            filepath,
+            filename
+        )
+
+    except Exception as e:
+
+        return (
+            f"Error reading data: {e}"
+        )
+
+    if variable not in df.columns:
+
+        return "Variable not found."
+
+    numeric_variables, categorical_variables = (
+        get_variable_types(df)
+    )
+
+    # -----------------------------------------------------
+    # Validate graph type
+    # -----------------------------------------------------
+
+    if graph_type in ["histogram", "boxplot"]:
+
+        if variable not in numeric_variables:
+
+            return (
+                "Histogram and boxplot require "
+                "a numeric variable."
+            )
+
+    elif graph_type == "barplot":
+
+        if variable not in categorical_variables:
+
+            return (
+                "Bar chart requires "
+                "a categorical variable."
+            )
+
+    else:
+
+        return "Invalid graph type."
+
+
+    # -----------------------------------------------------
+    # Remove missing values
+    # -----------------------------------------------------
+
+    data = df[variable].dropna()
+
+
+    # -----------------------------------------------------
+    # Create unique filename
+    # -----------------------------------------------------
+
+    graph_filename = (
+        str(uuid.uuid4())
+        + ".png"
+    )
+
+    graph_path = os.path.join(
+        PLOT_FOLDER,
+        graph_filename
+    )
+
+
+    # -----------------------------------------------------
+    # Create graph
+    # -----------------------------------------------------
+
+    plt.figure(
+        figsize=(8, 5)
+    )
+
+
+    if graph_type == "histogram":
+
+        plt.hist(
+            data,
+            bins=20,
+            edgecolor="black"
+        )
+
+        plt.xlabel(variable)
+
+        plt.ylabel("Frequency")
+
+        plt.title(
+            f"Histogram of {variable}"
+        )
+
+
+    elif graph_type == "boxplot":
+
+        plt.boxplot(
+            data,
+            vert=True
+        )
+
+        plt.ylabel(variable)
+
+        plt.title(
+            f"Boxplot of {variable}"
+        )
+
+
+    elif graph_type == "barplot":
+
+        counts = (
+            data.astype(str)
+            .value_counts()
+            .sort_values(
+                ascending=False
+            )
+        )
+
+        counts.plot(
+            kind="bar"
+        )
+
+        plt.xlabel(variable)
+
+        plt.ylabel("Frequency")
+
+        plt.title(
+            f"Bar Chart of {variable}"
+        )
+
+        plt.xticks(
+            rotation=45,
+            ha="right"
+        )
+
+
+    plt.tight_layout()
+
+    plt.savefig(
+        graph_path,
+        dpi=150
+    )
+
+    plt.close()
+
+
+    # -----------------------------------------------------
+    # Data preview
+    # -----------------------------------------------------
+
+    preview = df.head(100)
+
+    table = preview.to_html(
+        classes="data-table",
+        index=False
+    )
+
+
+    # -----------------------------------------------------
+    # Return results page
+    # -----------------------------------------------------
+
+    return render_template(
+        "data.html",
+
+        filename=filename,
+
+        rows=len(df),
+
+        columns=len(df.columns),
+
+        table=table,
+
+        numeric_variables=numeric_variables,
+
+        categorical_variables=categorical_variables,
+
+        all_variables=df.columns.tolist(),
+
+        graph_type=graph_type,
+
+        graph_file=graph_filename,
+
+        selected_variable=variable,
+
+        error=None
     )
 
 
@@ -344,14 +464,6 @@ if __name__ == "__main__":
     print("=" * 60)
 
     print()
-    print("Application folder:")
-    print(BASE_DIR)
-
-    print()
-    print("Upload folder:")
-    print(UPLOAD_FOLDER)
-
-    print()
     print("Open your browser:")
     print("http://127.0.0.1:5000")
 
@@ -362,3 +474,4 @@ if __name__ == "__main__":
     app.run(
         debug=True
     )
+```
